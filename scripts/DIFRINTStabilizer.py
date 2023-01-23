@@ -1,4 +1,5 @@
 import argparse
+import glob
 import os
 import sys
 from shutil import copyfile
@@ -59,6 +60,19 @@ DIFNet.load_state_dict(torch.load(args.modelPath))
 DIFNet.eval()
 
 ##########################################################
+
+
+def cleanup_frames(tmp_frames_dir):
+    """
+    Cleanup the frames from the tmp location once done making GIF
+    :param tmp_frames_dir: Location to clear frames for to prepare for next call
+    :return:
+    """
+    # Get rid of temp png files
+    for file_name in glob.glob(os.path.join(tmp_frames_dir, '*.jpg')):
+        os.remove(file_name)
+    return
+
 
 # Retrieve path for input and output files
 in_file = args.file
@@ -142,3 +156,7 @@ for f in frameList:
         out.write(img)
 
 out.release()
+
+# FLush the temporary frame folders
+cleanup_frames(in_tmp_loc)
+cleanup_frames(out_tmp_loc)

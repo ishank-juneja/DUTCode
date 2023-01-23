@@ -44,24 +44,24 @@ def generateStable(model, in_file, outPath, outPrefix, max_length, args):
     og_width = int(unstable_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     og_height = int(unstable_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    image_len = min(int(unstable_cap.get(cv2.CAP_PROP_FRAME_COUNT)), max_length)
-
     # read input video into lists
     images_gs = []
     rgbimages = []
-    for i in range(image_len):
-        # Read in BGR frame
-        ret, frame = unstable_cap.read()
+    # Attempt to read in first frame
+    # Read in BGR frame
+    ret, frame = unstable_cap.read()
+    # Read in remaining frames untill end
+    while ret:
         # Create a grayscale version of read in frame
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
         image_gs = gray * (1. / 255.)
         image_gs = cv2.resize(image_gs, (cfg.MODEL.WIDTH, cfg.MODEL.HEIGHT))
         images_gs.append(image_gs.reshape(1, 1, cfg.MODEL.HEIGHT, cfg.MODEL.WIDTH))
-
         image_BGR = cv2.resize(frame, (cfg.MODEL.WIDTH, cfg.MODEL.HEIGHT))
         # Convert BGR frame to RGB frame and append to list
         rgbimages.append(np.expand_dims(np.transpose(image_BGR, (2, 0, 1)), 0))
+        # Read in next_frame
+        ret, frame = unstable_cap.read()
 
     x = np.concatenate(images_gs, 1).astype(np.float32)
     x = torch.from_numpy(x).unsqueeze(0)

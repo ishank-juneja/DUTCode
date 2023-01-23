@@ -88,10 +88,13 @@ unstable_cap = cv2.VideoCapture(in_file)
 image_len = int(unstable_cap.get(cv2.CAP_PROP_FRAME_COUNT))
 images = []
 
-for i in range(image_len):
-    ret, frame_BGR = unstable_cap.read()
+# Read in the first frame ...
+ret, frame_BGR = unstable_cap.read()
+# Read in remaining frames ...
+while ret:
     image_BGR = cv2.resize(frame_BGR, (width, height))
     images.append(image_BGR)
+    ret, frame_BGR = unstable_cap.read()
 
 print('inference with {}'.format(args.indices))
 
