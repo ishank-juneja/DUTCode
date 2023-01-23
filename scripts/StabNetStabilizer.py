@@ -14,7 +14,14 @@ sys.path.append(parentddir)
 from models.StabNet.v2_93 import *
 from models.StabNet.model import stabNet
 
+# Set frame rate for output video
+OUT_FPS = 25.0
+
 parser = argparse.ArgumentParser()
+# Add input file path, default type is string
+parser.add_argument("-i", action="store", dest="file")
+# Add output folder path, default type is string
+parser.add_argument("-o", action="store", dest="file_out")
 parser.add_argument('--modelPath', default='./models')
 parser.add_argument('--before-ch', type=int)
 parser.add_argument('--OutputBasePath', default='data_video_local')
@@ -72,17 +79,19 @@ def warpRevBundle2(img, x_map, y_map):
     assert(dst.shape == (height, width, 3))
     return dst
 
-production_dir = args.OutputBasePath
-make_dirs(production_dir)
 
-image_len = len([ele for ele in os.listdir(args.InputBasePath) if ele[-4:] == '.jpg'])
+# Retrieve path for input and output files
+in_file = args.file
+out_path = args.file_out
+unstable_cap = cv2.VideoCapture(in_file)
+
+image_len = int(unstable_cap.get(cv2.CAP_PROP_FRAME_COUNT))
 images = []
 
 for i in range(image_len):
-
-    image = cv2.imread(os.path.join(args.InputBasePath, '{}.jpg'.format(i)))
-    image = cv2.resize(image, (width, height))
-    images.append(image)
+    ret, frame_BGR = unstable_cap.read()
+    image_BGR = cv2.resize(frame_BGR, (width, height))
+    images.append(image_BGR)
 
 print('inference with {}'.format(args.indices))
 
@@ -231,8 +240,7 @@ finally:
                         if (s > max_s):
                             max_s = s
                             ans = [i, j, hh, ww]
-    videoWriter = cv2.VideoWriter(os.path.join(production_dir, 'StabNet_stable.mp4'), 
-        cv2.VideoWriter_fourcc(*'MP4V'), 25, (ans[3] - ans[1] + 1, ans[2] - ans[0] + 1))
+    videoWriter = cv2.VideoWriter(out_path, cv2.VideoWriter_fourcc(*'MP4V'), OUT_FPS, (ans[3] - ans[1] + 1, ans[2] - ans[0] + 1))
     for frame in frames:
         frame_ = frame[ans[0]:ans[2] + 1, ans[1]:ans[3] + 1, :]
         videoWriter.write(frame_)
