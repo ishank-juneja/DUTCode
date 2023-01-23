@@ -270,7 +270,7 @@ def cupy_kernel(strFunction, objVariables):
 	return strKernel
 # end
 
-@cupy.util.memoize(for_each_device=True)
+@cupy.memoize(for_each_device=True)
 def cupy_launch(strFunction, strKernel):
 	return cupy.cuda.compile_with_cache(strKernel).get_function(strFunction)
 # end
@@ -282,6 +282,12 @@ class _FunctionCorrelation(torch.autograd.Function):
 		rbot1 = first.new_zeros([ first.shape[0], first.shape[2] + 8, first.shape[3] + 8, first.shape[1] ])
 
 		self.save_for_backward(first, second, rbot0, rbot1)
+
+		# Added these lines to manually ensure that the tensors being correlated are contguous in mmemory
+		#  This is needed for the method t produce correect results
+		# https://github.com/Annbless/DUTCode/issues/19#issuecomment-1399498040
+		first = first.contiguous()
+		second = second.contiguous()
 
 		assert(first.is_contiguous() == True)
 		assert(second.is_contiguous() == True)

@@ -33,7 +33,8 @@ after_ch = max(1, -min(args.indices) + 1)
 
 model = stabNet()
 r_model = torch.load(args.modelPath)
-model.load_state_dict(r_model)
+# https://stackoverflow.com/questions/54058256/runtimeerror-errors-in-loading-state-dict-for-resnet
+model.load_state_dict(r_model, strict=False)
 model.cuda()
 model.eval()
 
